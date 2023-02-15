@@ -1,7 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
+import { FileUploader } from "react-drag-drop-files";
+import PropagateLoader from "react-spinners/PropagateLoader";
 
-axios.defaults.baseURL = "http://localhost:5012";
+const fileTypes = ["JPEG", "PNG", "JPG"];
+
+axios.defaults.baseURL = "http://localhost:5001";
 
 function App() {
   const [file, setFile] = useState(null);
@@ -10,9 +14,9 @@ function App() {
 
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (file) {
+      setLoading(true);
       const formData = new FormData();
       formData.append("file", file);
       try {
@@ -38,28 +42,49 @@ function App() {
         URL.revokeObjectURL(href);
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoading(false);
       }
     }
   };
+  const handleChange = (file: any) => {
+    setFile(file[0]);
+  };
+  const handleClear = () => {
+    setFile(null);
+    setFile2(null);
+  };
   return (
-    <div>
-      <h1>hello</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          onChange={(e) => {
-            // @ts-ignore
-            setFile(e.target.files[0]);
-            setFile2(null);
-          }}
-          type="file"
-          name="file"
-          id="file"
-          accept=".png, .jpg, .jpeg"
-        />
-        <button>submit</button>
-      </form>
-      <div>
-        <div>
+    <div className="h-screen w-screen flex flex-col items-center mt-20">
+      <FileUploader
+        multiple={true}
+        handleChange={handleChange}
+        name="file"
+        types={fileTypes}
+      />
+      <div className="flex items-center gap-4">
+        <button
+          className="py-1.5 px-5 bg-blue-500 text-white rounded mt-4"
+          onClick={handleSubmit}
+        >
+          Upload
+        </button>
+        <button
+          className="py-1.5 px-4 bg-blue-500 text-white rounded mt-4"
+          onClick={handleClear}
+        >
+          Clear
+        </button>
+      </div>
+      {loading && (
+        <div className="my-8 flex flex-col items-center">
+          <p className="mb-4">Processing... Please wait...</p>
+          <PropagateLoader size={20} color="#3B82F6" />
+        </div>
+      )}
+      <div className="flex mt-4 text-xl font-semibold gap-4">
+        <div className="text-center">
+          <h2>Uploaded photo</h2>
           {file && (
             <img
               src={URL.createObjectURL(file)}
@@ -68,7 +93,8 @@ function App() {
             />
           )}
         </div>
-        <div>
+        <div className="text-center">
+          <h2>Enhanced photo</h2>
           {file2 && (
             <img
               src={URL.createObjectURL(file2)}
